@@ -28,12 +28,14 @@ namespace TaskFlow.Controllers
             _userManager = userManager;
             _configuration = configuration;
         }
-        [Authorize]
+        [Authorize]//doit retourné :  401 → pas authentifié ou bien :403 → pas autorisé
+
         [HttpGet("test")]
         public IActionResult Test()
         {
             return Ok("Tu es authentifié !");
         }
+
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto model)
         {
@@ -74,7 +76,7 @@ namespace TaskFlow.Controllers
                 token = token
             });
         }
-
+        [Authorize]
         [HttpGet("ping")]
         public IActionResult Ping()
         {

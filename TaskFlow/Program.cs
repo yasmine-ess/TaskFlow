@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Identity;
+Ôªøusing Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TaskFlow.Models;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -7,17 +7,50 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//Configurer l'authentification JWT.
-//On utilise la mÈthode AddAuthentication pour configurer le schÈma d'authentification,
-//en spÈcifiant JwtBearerDefaults.AuthenticationScheme pour indiquer que nous utilisons
-//l'authentification par jeton JWT.
-//Ensuite, on utilise AddJwtBearer pour configurer les options de validation du jeton.
-//On rÈcupËre la clÈ secrËte ‡ partir du fichier de configuration (appsettings.json)
-//et on configure les paramËtres de validation du jeton, tels que la validation de l'Èmetteur,
-//de l'audience, de la durÈe de vie et de la clÈ de signature.
-//Assurez-vous que les valeurs dans appsettings.json correspondent ‡ celles utilisÈes lors de
-//la gÈnÈration du jeton dans le contrÙleur d'authentification.  
+////////////////////////////////////////////////////////////////
+/// üîµ 1. CONFIGURATION DE LA BASE DE DONN√âES (Entity Framework)
+////////////////////////////////////////////////////////////////
+/// Permet √† ton API de parler avec SQL Server.
+/// La cha√Æne de connexion est dans appsettings.json
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+////////////////////////////////////////////////////////////////
+/// üîµ 2. CONFIGURATION D'IDENTITY (gestion des utilisateurs)
+////////////////////////////////////////////////////////////////
+/// Identity g√®re :
+/// - cr√©ation de compte
+/// - login
+/// - hash des mots de passe
+/// - r√¥les
+
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders();
+
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 401;
+        return Task.CompletedTask;
+    };
+
+    options.Events.OnRedirectToAccessDenied = context =>
+    {
+        context.Response.StatusCode = 403;
+        return Task.CompletedTask;
+    };
+});
+////////////////////////////////////////////////////////////////
+/// üîµ 3. AUTHENTIFICATION JWT (s√©curiser l'API)
+////////////////////////////////////////////////////////////////
+/// Ici on dit :
+/// üëâ "Toutes les routes avec [Authorize] n√©cessitent un token"
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
@@ -25,41 +58,70 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
         options.TokenValidationParameters = new TokenValidationParameters
         {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
+            ValidateIssuer = true,        // V√©rifie qui a cr√©√© le token
+            ValidateAudience = true,      // V√©rifie √† qui il est destin√©
+            ValidateLifetime = true,      // V√©rifie qu'il n'est pas expir√©
+            ValidateIssuerSigningKey = true, // V√©rifie la signature
+
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
             IssuerSigningKey = new SymmetricSecurityKey(key)
         };
     });
 
-
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
-//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///
+////////////////////////////////////////////////////////////////
+/// üîµ 4. AUTORISATION
+////////////////////////////////////////////////////////////////
+/// Permet d'utiliser [Authorize]
 builder.Services.AddAuthorization();
 
-//Lier DbContext dans Program.cs
-//On utilise la mÈthode d'extension UseSqlServer pour configurer le contexte de donnÈes pour utiliser SQL Server. La chaÓne de connexion est rÈcupÈrÈe ‡ partir du fichier de configuration (appsettings.json) en utilisant la clÈ "DefaultConnection". Assurez-vous que cette clÈ est correctement dÈfinie dans votre fichier de configuration avec les informations de connexion appropriÈes pour votre base de donnÈes SQL Server.   
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-////////////////////
-///
-
-
-// Add services to the container.
-
+////////////////////////////////////////////////////////////////
+/// üîµ 5. CONTROLLERS
+////////////////////////////////////////////////////////////////
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
 
+////////////////////////////////////////////////////////////////
+/// üîµ 6. SWAGGER + JWT (IMPORTANT üî•)
+////////////////////////////////////////////////////////////////
+/// Ajoute le bouton üîê Authorize dans Swagger
+builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddSwaggerGen(options =>
+{
+    options.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Description = "Tape : Bearer {ton token}"
+    });
+
+    options.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            Array.Empty<string>()
+        }
+    });
+});
+
+///////////////////////////////////////////////////////////////
+/// üîµ BUILD DE L'APPLICATION
+///////////////////////////////////////////////////////////////
 var app = builder.Build();
+
+////////////////////////////////////////////////////////////////
+/// üîµ MIDDLEWARE (ordre ULTRA IMPORTANT)
+////////////////////////////////////////////////////////////////
 
 if (app.Environment.IsDevelopment())
 {
@@ -69,8 +131,10 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.UseAuthentication(); // ?? AVANT
-app.UseAuthorization();  // ?? APR»S
+/// ‚ö†Ô∏è Toujours dans cet ordre :
+app.UseAuthentication(); // v√©rifie le token
+app.UseAuthorization();  // v√©rifie les droits
 
 app.MapControllers();
+
 app.Run();
