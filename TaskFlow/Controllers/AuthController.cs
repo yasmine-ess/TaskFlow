@@ -8,6 +8,7 @@ using System.Security.Claims;
 using System.Text;
 using TaskFlow.Models;
 using TaskFlow.Models.DTOs;
+using TaskFlow.Services;    
 
 namespace TaskFlow.Controllers
 {
@@ -20,13 +21,16 @@ namespace TaskFlow.Controllers
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IConfiguration _configuration;
+        private readonly ITokenService _tokenService;   
 
         public AuthController(
             UserManager<ApplicationUser> userManager,
-            IConfiguration configuration)
+            IConfiguration configuration ,
+            ITokenService tokenService  )
         {
             _userManager = userManager;
             _configuration = configuration;
+            _tokenService = tokenService;
         }
         [Authorize]//doit retourné :  401 → pas authentifié ou bien :403 → pas autorisé
 
@@ -48,6 +52,8 @@ namespace TaskFlow.Controllers
 
             var result = await _userManager.CreateAsync(user, model.Password);
 
+            //leurs donner le role "User" par défaut    
+            await _userManager.AddToRoleAsync(user, "User");
             if (!result.Succeeded)
                 return BadRequest(result.Errors);
 
@@ -68,7 +74,9 @@ namespace TaskFlow.Controllers
         if (!passwordValid) return Unauthorized("Email ou mot de passe invalide");
 
             //  CREER LE TOKEN ICI
-            var token = GenerateJwtToken(user);
+            //var token = GenerateJwtToken(user);
+            var roles = await _userManager.GetRolesAsync(user);
+            var token = _tokenService.CreateToken(user, roles);
 
             // retourner le token
             return Ok(new
@@ -76,14 +84,14 @@ namespace TaskFlow.Controllers
                 token = token
             });
         }
-        [Authorize]
-        [HttpGet("ping")]
-        public IActionResult Ping()
+       
+        [Authorize(Roles = "Admin")]
+        [HttpGet("admin-only")]
+        public IActionResult AdminOnly()
         {
-            return Ok("PING OK");
+            return Ok("Bienvenue Admin !");
         }
-
-        private string GenerateJwtToken(ApplicationUser user)
+       /* private string GenerateJwtToken(ApplicationUser user)
         {
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
@@ -92,9 +100,9 @@ namespace TaskFlow.Controllers
 
             var claims = new[]
             {
-        new Claim(ClaimTypes.NameIdentifier, user.Id),
-        new Claim(ClaimTypes.Email, user.Email)
-    };
+                new Claim(ClaimTypes.NameIdentifier, user.Id),
+                new Claim(ClaimTypes.Email, user.Email)
+              };
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
@@ -104,7 +112,7 @@ namespace TaskFlow.Controllers
                 signingCredentials: creds);
 
             return new JwtSecurityTokenHandler().WriteToken(token);
-        }
+        }*/
 
 
 

@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using TaskFlow.Models;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using TaskFlow.Models;
+using TaskFlow.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -113,7 +114,7 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
-
+builder.Services.AddScoped<ITokenService, TokenService>();
 ///////////////////////////////////////////////////////////////
 /// 🔵 BUILD DE L'APPLICATION
 ///////////////////////////////////////////////////////////////
@@ -137,4 +138,24 @@ app.UseAuthorization();  // vérifie les droits
 
 app.MapControllers();
 
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+    string[] roles = { "Admin", "User" };
+
+    foreach (var role in roles)
+    {
+        if (!await roleManager.RoleExistsAsync(role))
+        {
+            await roleManager.CreateAsync(new IdentityRole(role));
+        }
+    }
+}
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await DbSeeder.SeedRolesAndAdminAsync(services);
+}
 app.Run();
