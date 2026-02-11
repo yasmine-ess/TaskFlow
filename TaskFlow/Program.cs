@@ -115,6 +115,20 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 builder.Services.AddScoped<ITokenService, TokenService>();
+
+///////////////////////////////////////////////////////////////
+/// 🔵 Autoriser Angular à parler à mon API (CORS)
+///////////////////////////////////////////////////////////////
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular",
+        policy =>
+        {
+            policy.WithOrigins("http://localhost:4200")
+                  .AllowAnyHeader()
+                  .AllowAnyMethod();
+        });
+});
 ///////////////////////////////////////////////////////////////
 /// 🔵 BUILD DE L'APPLICATION
 ///////////////////////////////////////////////////////////////
@@ -131,7 +145,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("AllowAngular"); 
 /// ⚠️ Toujours dans cet ordre :
 app.UseAuthentication(); // vérifie le token
 app.UseAuthorization();  // vérifie les droits
