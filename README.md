@@ -1,6 +1,6 @@
 # TaskFlow Frontend
 
-Frontend Angular du projet **TaskFlow**, une application SaaS de gestion de tâches développée avec :
+ projet **TaskFlow**, une application SaaS de gestion de tâches développée avec :
 
 - ASP.NET Core Web API (.NET 8/9)
 - Angular
