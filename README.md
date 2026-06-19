@@ -1,93 +1,103 @@
-# TaskFlow 
+# TaskFlow API 🔐
 
- projet **TaskFlow**, une application SaaS de gestion de tâches développée avec :
+ Backend ASP.NET Core Web API du projet **TaskFlow** — application SaaS de gestion de tâches avec authentification JWT et gestion des rôles.
 
-- ASP.NET Core Web API (.NET 8/9)
-- Angular
-- JWT Authentication
-- ASP.NET Identity
-- Role-based Authorization
+## 🛠️ Stack technique
 
----
 
-# 🚀 Objectif du projet
+| ASP.NET Core Web API (.NET 8) : Framework backend           |
+| Entity Framework Core         : ORM / accès base de données |
+| ASP.NET Identity              :  Gestion des utilisateurs   |
+| SQL Server                    : Base de données             |
+| JWT Authentication :          : Sécurisation des routes     |
+| Swagger                       : Documentation & tests API   |
 
-Construire une application moderne de gestion de tâches permettant :
 
-- authentification des utilisateurs
-- sécurisation avec JWT
-- gestion des rôles (Admin / User)
-- communication Angular ↔ ASP.NET Core Web API
-- architecture propre et scalable
 
-Projet réalisé dans un objectif :
+## ✅ Fonctionnalités implémentées
 
-- d’apprentissage avancé .NET + Angular
-- préparation aux entretiens techniques
-- construction d’un projet fullstack crédible
+-Inscription utilisateur
+-Connexion utilisateur avec génération de JWT
+-Validation des tokens
+-Gestion des rôles (Admin / User)
+-Routes protégées avec `[Authorize]`
+-Contrôle d'accès par rôle (`[Authorize(Roles = "Admin")]`)
+-Seed automatique des rôles et d'un administrateur par défaut
+-Documentation Swagger avec support Bearer Token
 
----
+## 🔜 À venir
 
-# 🧠 Stack Technique
-
-## Frontend
-
-- Angular
-- TypeScript
-- HTML / CSS
-- Angular Routing
-- HttpClient
-
-## Backend (API)
-
-- ASP.NET Core Web API
-- Entity Framework Core
-- ASP.NET Identity
-- JWT Authentication
-- SQL Server
+-  CRUD complet des tâches
+-  Gestion des catégories et priorités
+-  Refresh Token
+-  intercepteur d'erreurs global
+-  Pagination des résultats
+-  Validation avancée des données
+-  Architecture Services + Interfaces complète
+-  Déploiement cloud (Azure)
 
 ---
 
-# 🔐 Fonctionnalités implémentées
+## 📡 Endpoints
 
-## Backend
+### Auth — `/api/Auth`
 
-✅ Register utilisateur  
-✅ Login utilisateur  
-✅ JWT Authentication  
-✅ Role-based Authorization  
-✅ Swagger avec Bearer Token  
-✅ Seeding automatique des rôles et admin  
-✅ Routes protégées avec `[Authorize]`
+| Méthode | Route        | Description                               | Auth requise |
 
----
-
-## Frontend Angular
-
-✅ Création du projet Angular  
-✅ Connexion Angular ↔ API .NET  
-✅ Service Auth Angular  
-✅ Formulaire Login  
-✅ Appel API Login  
-✅ Récupération du JWT  
-✅ Stockage du token dans `localStorage`  
-✅ Routing Angular  
-✅ Dashboard standalone component
+| `POST`  | `/register`  | Création d'un utilisateur                 |      ❌      |
+| `POST`  | `/login`     | Connexion — retourne un JWT               |      ❌      |
+| `GET`   | `/test`      | Route protégée (test)                     |      ✅      |
+| `GET`   | `/admin-only`| Accessible aux administrateurs uniquement |    ✅ Admin  |
 
 ---
 
-# 📂 Structure du projet
+## 🏗️ Architecture
+
+```
+TaskFlow-API/
+├── Controllers/        # Endpoints HTTP
+├── Models/             # Entités base de données
+├── DTOs/               # Objets de transfert de données
+├── Data/               # DbContext et configuration EF Core
+└── Services/           # Logique métier
+```
+
+### Contenu du JWT
+
+Le token contient les claims suivants :
+- `UserId`
+- `Email`
+- `Roles`
+
+Les rôles sont intégrés directement dans le token pour permettre l'autorisation basée sur les rôles sans appel supplémentaire à la base de données.
+
+---
+
+## 🚀 Lancement
+
+**Prérequis :** .NET 8 SDK, SQL Server
 
 ```bash
-src/app
-│
-├── pages
-│   ├── login
-│   └── dashboard
-│
-├── services
-│   └── auth.service.ts
-│
-├── app.routes.ts
-├── app.config.ts
-└── app.ts
+# Restaurer les dépendances
+dotnet restore
+
+# Appliquer les migrations
+dotnet ef database update
+
+# Lancer le projet
+dotnet run
+```
+
+**Swagger disponible sur :** `https://localhost:7243/swagger`
+
+---
+
+## 🎯 Objectif du projet
+
+Projet réalisé pour approfondir et démontrer mes compétences en :
+- Architecture API REST avec ASP.NET Core
+- Sécurité applicative (JWT, RBAC, ASP.NET Identity)
+- Entity Framework Core et SQL Server
+- Développement Full Stack .NET + Angular
+
+**Frontend associé :** [TaskFlow Frontend](https://github.com/yasmine-ess/TaskFlow-Frontend)
