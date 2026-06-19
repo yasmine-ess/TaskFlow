@@ -1,40 +1,43 @@
 # TaskFlow API 🔐
 
- Backend ASP.NET Core Web API du projet **TaskFlow** — application SaaS de gestion de tâches avec authentification JWT et gestion des rôles.
+> Backend ASP.NET Core Web API du projet **TaskFlow** — application SaaS de gestion de tâches avec authentification JWT et gestion des rôles.
+
+---
 
 ## 🛠️ Stack technique
 
+| Technologie | Usage |
+|---|---|
+| ASP.NET Core Web API (.NET 8) | Framework backend |
+| Entity Framework Core | ORM / accès base de données |
+| ASP.NET Identity | Gestion des utilisateurs |
+| SQL Server | Base de données |
+| JWT Authentication | Sécurisation des routes |
+| Swagger | Documentation & tests API |
 
-| ASP.NET Core Web API (.NET 8) : Framework backend           |
-| Entity Framework Core         : ORM / accès base de données |
-| ASP.NET Identity              :  Gestion des utilisateurs   |
-| SQL Server                    : Base de données             |
-| JWT Authentication :          : Sécurisation des routes     |
-| Swagger                       : Documentation & tests API   |
-
-
+---
 
 ## ✅ Fonctionnalités implémentées
 
--Inscription utilisateur
--Connexion utilisateur avec génération de JWT
--Validation des tokens
--Gestion des rôles (Admin / User)
--Routes protégées avec `[Authorize]`
--Contrôle d'accès par rôle (`[Authorize(Roles = "Admin")]`)
--Seed automatique des rôles et d'un administrateur par défaut
--Documentation Swagger avec support Bearer Token
+- [x] Inscription utilisateur
+- [x] Connexion utilisateur avec génération de JWT
+- [x] Validation des tokens
+- [x] Gestion des rôles (Admin / User)
+- [x] Routes protégées avec `[Authorize]`
+- [x] Contrôle d'accès par rôle (`[Authorize(Roles = "Admin")]`)
+- [x] Seed automatique des rôles et d'un administrateur par défaut
+- [x] Documentation Swagger avec support Bearer Token
 
 ## 🔜 À venir
 
--  CRUD complet des tâches
--  Gestion des catégories et priorités
--  Refresh Token
--  intercepteur d'erreurs global
--  Pagination des résultats
--  Validation avancée des données
--  Architecture Services + Interfaces complète
--  Déploiement cloud (Azure)
+- [ ] CRUD complet des tâches
+- [ ] Gestion des catégories et priorités
+- [ ] Refresh Token
+- [ ] Intercepteur d'erreurs global
+- [ ] Pagination des résultats
+- [ ] Validation avancée des données
+- [ ] Architecture Services + Interfaces complète
+- [ ] Déploiement cloud (Azure)
 
 ---
 
@@ -42,12 +45,12 @@
 
 ### Auth — `/api/Auth`
 
-| Méthode | Route        | Description                               | Auth requise |
-
-| `POST`  | `/register`  | Création d'un utilisateur                 |      ❌      |
-| `POST`  | `/login`     | Connexion — retourne un JWT               |      ❌      |
-| `GET`   | `/test`      | Route protégée (test)                     |      ✅      |
-| `GET`   | `/admin-only`| Accessible aux administrateurs uniquement |    ✅ Admin  |
+| Méthode | Route | Description | Auth requise |
+|---|---|---|---|
+| `POST` | `/register` | Création d'un utilisateur | ❌ |
+| `POST` | `/login` | Connexion — retourne un JWT | ❌ |
+| `GET` | `/test` | Route protégée (test) | ✅ |
+| `GET` | `/admin-only` | Accessible aux administrateurs uniquement | ✅ Admin |
 
 ---
 
